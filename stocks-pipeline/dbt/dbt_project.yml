@@ -1,0 +1,10 @@
+name: stocks_analytics
+version: 1.0.0
+profile: stocks_profile
+model-paths: ["models"]
+models:
+  stocks_analytics:
+    staging:
+      +schema: staging
+    marts:
+      +schema: analytics

@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: stocks_pg
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/bootstrap.sql:/docker-entrypoint-initdb.d/00_bootstrap.sql
+
+  airflow:
+    image: apache/airflow:2.9.2
+    container_name: stocks_airflow
+    depends_on: [postgres]
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/requirements.txt:/requirements.txt
+      - ./app:/opt/airflow/app
+      - ./dbt:/opt/airflow/dbt
+    entrypoint: ["/bin/bash","-lc","pip install -r /requirements.txt && airflow db migrate && airflow users  create --role Admin --username admin --password admin --firstname a --lastname b --email admin@example.com || true && airflow webserver & airflow scheduler"]
+    ports: ["8080:8080"]
+
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-postgres:1.8.7
+    container_name: stocks_dbt
+    depends_on: [postgres]
+    volumes:
+      - ./dbt:/usr/app
+    working_dir: /usr/app
+
+volumes:
+  pgdata:

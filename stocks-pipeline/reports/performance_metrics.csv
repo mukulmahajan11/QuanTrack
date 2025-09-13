@@ -1,0 +1,5 @@
+metric,value
+throughput_rows_per_sec,120000
+end_to_end_latency_secs,75
+freshness_sla_mins,5
+daily_rows_processed,4500000
